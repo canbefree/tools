@@ -1,7 +1,7 @@
 package helper
 
 import (
-	"github.com/canbefree/tools/infra"
+	"github.com/SuperJourney/tools/infra"
 )
 
 var PaincIfErr = func(err error) {

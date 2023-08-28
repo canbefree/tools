@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/canbefree/tools/helper"
+	"github.com/SuperJourney/tools/helper"
 )
 
 func main() {
