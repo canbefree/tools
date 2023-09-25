@@ -6,6 +6,17 @@ import (
 	"sync"
 )
 
+type EventManageIFace interface {
+	// 分发任务
+	Dispatch(ctx context.Context, et string, params ...interface{}) []error
+
+	// 添加监听
+	AddListen(event EventIFace, l ListerIFace) error
+
+	// 添加监听
+	AddListenCallback(eventTag string, fn callback) error
+}
+
 const EventExample1 = "event1"
 
 var EventDict = map[string]struct{}{
@@ -18,29 +29,18 @@ var (
 )
 
 var DefaultEventMange = &EventManage{
-	g:       sync.WaitGroup{},
 	lock:    sync.Mutex{},
 	listens: make(map[string][]interface{}),
+	log:     DefaultLog,
 }
 
 var EventManageInstance EventManageIFace = DefaultEventMange
-
-type EventManageIFace interface {
-	// 分发任务
-	Dispatch(ctx context.Context, et string, params ...interface{}) []error
-
-	// 添加监听
-	AddListen(event EventIFace, l ListerIFace) error
-
-	// 添加监听
-	AddListenCallback(eventTag string, fn callback) error
-}
 
 type EventManage struct {
 	g       sync.WaitGroup
 	lock    sync.Mutex
 	listens map[string][]interface{}
-	log     Log
+	log     LogI
 }
 
 type EventIFace interface {
@@ -84,6 +84,7 @@ func (m *EventManage) AddListenCallback(eventTag string, fn callback) error {
 }
 
 func (m *EventManage) Dispatch(ctx context.Context, et string, params ...interface{}) []error {
+	g := &sync.WaitGroup{}
 	errs := make([]error, len(m.listens))
 	var i = 0
 	for eventTag, v := range m.listens {
@@ -93,27 +94,27 @@ func (m *EventManage) Dispatch(ctx context.Context, et string, params ...interfa
 		for _, vv := range v {
 			switch vt := vv.(type) {
 			case callback:
-				m.g.Add(1)
+				g.Add(1)
 				go func(i int) {
+					defer g.Done()
 					defer func() {
 						if r := recover(); r != nil {
 							m.log.ErrorfWithContext(ctx, "inner_event, err:%v", r)
 						}
 					}()
-					defer m.g.Done()
 					if err := vt(ctx, params...); err != nil {
 						errs[i] = err
 					}
 				}(i)
 			case ListerIFace:
-				m.g.Add(1)
+				g.Add(1)
 				go func(i int) {
 					defer func() {
 						if r := recover(); r != nil {
 							m.log.ErrorfWithContext(ctx, "inner_event, err:%v", r)
 						}
 					}()
-					defer m.g.Done()
+					defer g.Done()
 					if err := vt.Handle(ctx, params...); err != nil {
 						errs[i] = err
 					}
@@ -122,7 +123,7 @@ func (m *EventManage) Dispatch(ctx context.Context, et string, params ...interfa
 		}
 		i++
 	}
-	m.g.Wait()
+	g.Wait()
 	var n = 0
 	for _, e := range errs {
 		if e != nil {

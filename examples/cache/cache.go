@@ -11,7 +11,7 @@ import (
 )
 
 type GrpcExampleService struct {
-	Cache           *helper.Repo
+	Cache           *helper.GlobalCache
 	SingleTonFlight *singleflight.Group
 }
 

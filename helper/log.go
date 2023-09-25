@@ -2,8 +2,7 @@ package helper
 
 import (
 	"context"
-
-	"github.com/SuperJourney/tools/infra"
+	"log"
 )
 
 type LogI interface {
@@ -13,7 +12,7 @@ type LogI interface {
 	ErrorfWithContext(context.Context, string, ...any)
 }
 
-var DefaultLog = Log{}
+var DefaultLog = &Log{}
 
 type Log struct {
 }
@@ -34,18 +33,20 @@ func (l *Log) ErrorfWithContext(ctx context.Context, format string, v ...any) {
 	ErrorfWithContext(ctx, format, v...)
 }
 
+var orginalLog = log.Default()
+
 func Printf(format string, v ...any) {
-	infra.Log.Printf(format, v...)
+	orginalLog.Printf(format, v...)
 }
 
 func PrintfWithContext(ctx context.Context, format string, v ...any) {
-	infra.Log.Printf(format, v...)
+	orginalLog.Printf(format, v...)
 }
 
 func Errorf(format string, v ...any) {
-	infra.Log.Fatalf(format, v...)
+	orginalLog.Fatalf(format, v...)
 }
 
 func ErrorfWithContext(ctx context.Context, format string, v ...any) {
-	infra.Log.Fatalf(format, v...)
+	orginalLog.Fatalf(format, v...)
 }

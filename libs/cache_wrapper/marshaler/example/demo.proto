@@ -1,0 +1,15 @@
+syntax = "proto3";
+package demo;
+
+/*
+    protoc -Ilibs/cache_wrapper/marshaler/example --go_out=./libs/cache_wrapper/marshaler/example/ libs/cache_wrapper/marshaler/example/demo.proto
+*/
+service ServiceName {
+    rpc Get(GetRequest)
+    returns (GetResponse);
+}
+message GetRequest{
+}
+message GetResponse{
+    string data = 1;
+}
