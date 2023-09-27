@@ -120,11 +120,11 @@ func Test_cacheWrapper_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cacheWrapper := NewCacheWrapper(cacheEngine, grpcRequestFormatter, 10)
-			var fn = func(args ...interface{}) []interface{} {
+			cacheWrapper.SetHandle(func(args ...interface{}) []interface{} {
 				resp, err := request.Get(args[0].(context.Context), args[1].(*DemoRequest))
 				return []interface{}{resp, err}
-			}
-			got, err := cacheWrapper.Get(context.TODO(), fn, []interface{}{&DemoResponse{}, errors.New("")}, context.TODO(), tt.demoRequest)
+			})
+			got, err := cacheWrapper.Request(context.TODO(), []interface{}{&DemoResponse{}, errors.New("")}, context.TODO(), tt.demoRequest)
 
 			tt.assertion(t, err)
 			assert.Equal(t, tt.want, got)

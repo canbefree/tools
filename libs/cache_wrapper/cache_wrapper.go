@@ -16,11 +16,17 @@ func NewCacheWrapper(cache infra.KVCacheI, request RequestFormatter, expired int
 	}
 }
 
-func (r *cacheWrapper) Get(ctx context.Context,
-	directFn func(...interface{}) []interface{},
+func (r *cacheWrapper) SetHandle(fn func(...interface{}) []interface{}) {
+	r.handler = fn
+}
+
+func (r *cacheWrapper) Request(ctx context.Context,
 	resp []interface{}, // UnMarshalWrapper 需要resp的类型
 	reqs ...interface{},
 ) ([]interface{}, error) {
+	if r.handler == nil {
+		panic("handler not set yet")
+	}
 	key := r.GetUniqKey(reqs...)
 	var fn = func() (interface{}, error) {
 		cache, err := r.cacheEngine.Get(ctx, key)
@@ -33,19 +39,19 @@ func (r *cacheWrapper) Get(ctx context.Context,
 		}
 
 		if r.cacheEngine.IsNotFoundErr(err) {
-			resp := directFn(reqs...)
-			respMarshal, err := r.MarshalWrapper(resp)
+			curResp := r.handler(reqs...)
+			respMarshal, err := r.MarshalWrapper(curResp)
 			if err != nil {
 				return nil, err
 			}
 			if err := r.cacheEngine.Set(ctx, key, respMarshal, int64(r.expired)); err != nil {
 				return nil, err
 			}
-			return resp, err
+			return curResp, err
 		}
 
 		// 获取cache失败，直接访问原函数
-		return directFn(reqs...), nil
+		return r.handler(reqs...), nil
 	}
 	i, err, _ := r.group.Do(string(key), fn)
 	if err != nil {
@@ -61,6 +67,8 @@ type cacheWrapper struct {
 	group       *singleflight.Group
 	RequestFormatter
 	expired int // 缓存多久
+
+	handler func(...interface{}) []interface{}
 }
 
 //go:generate mockery --name=RequestFormatter --outpkg=mock_formatter
