@@ -1,37 +1,49 @@
 # tools
 
-- 简单的函数类
-- 基础库，比如说通用缓存，通用数据库，通用日志；
+目录：
 
+    helper : 简单的函数类；
 
-目录： 
+    infra: 基础库；
 
-helper : 简单的函数类；
-
-infra: 基础库；
-
-libs : 相关工具类封装；
+    libs : 相关工具类封装；
 
 
 
+- [X] 通用缓存用例；
 
+  ```golang
 
-- [X] gprc通用缓存
-  ```
-  func (p *GrpcExampleService) Hello(ctx context.Context, req *pb_example.HelloRequest) (resp *pb_example.HelloResponse, err error) {
-  	var respWrap = &helper.GrpcRespWrap{
-  		Message: resp,
-  		Err:     nil,
-  	}
-  	if err := p.Cache.GrpcGet(ctx, p.SingleTonFlight, "Hello", req, respWrap, func() (proto.Message, error) {
-  		return p.hello(ctx, req)
-  	}, Expired); err != nil {
-  		// 获取缓存失败直接查数据库
-  		if err != respWrap.Err {
-  			return p.hello(ctx, req)
-  		}
-  	}
-  	return &pb_example.HelloResponse{}, nil
+  import (
+    	marshaler "github.com/SuperJourney/grpc_marshaler"
+  )
+
+  type RequestFormat struct {
+  	marshaler.Marshaler
+  }
+
+  func NewRequestFormat() *RequestFormat {
+  	return &RequestFormat{}
+  }
+
+  func (r *RequestFormat) GetUniqKey(key string, reqs ...interface{}) []byte {
+  	bts, _ := r.MarshalWrapper(reqs...)
+  	md5bts := md5.Sum(bts)
+  	return []byte(fmt.Sprintf("common-cache:%s:%s", key, md5bts))
   }
   ```
-- [ ] inner_event
+
+  ```golang
+  	cacheWrapper := NewCacheWrapper(cacheEngine, RequestFormat(), 10)
+  	cacheWrapper.SetHandle(func(args ...interface{}) []interface{} {
+  		resp, err := request.Get(args[0].(context.Context), args[1].(*DemoRequest))
+  		return []interface{}{resp, err}
+  	})
+  	got, err := cacheWrapper.Request(context.TODO(), []interface{}{&DemoResponse{}, errors.New("")}, context.TODO(), tt.demoRequest)
+
+  ```
+
+
+- [X] inner_event
+
+    MQ平替版

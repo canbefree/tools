@@ -20,6 +20,10 @@ func (r *cacheWrapper) SetHandle(fn func(...interface{}) []interface{}) {
 	r.handler = fn
 }
 
+func (r *cacheWrapper) SetUniqueKey(uniqueKey string) {
+	r.uniqKey = uniqueKey
+}
+
 func (r *cacheWrapper) Request(ctx context.Context,
 	resp []interface{}, // UnMarshalWrapper 需要resp的类型
 	reqs ...interface{},
@@ -27,7 +31,7 @@ func (r *cacheWrapper) Request(ctx context.Context,
 	if r.handler == nil {
 		panic("handler not set yet")
 	}
-	key := r.GetUniqKey(reqs...)
+	key := r.GetUniqKey(r.uniqKey, reqs...)
 	var fn = func() (interface{}, error) {
 		cache, err := r.cacheEngine.Get(ctx, key)
 		if err == nil {
@@ -68,12 +72,13 @@ type cacheWrapper struct {
 	RequestFormatter
 	expired int // 缓存多久
 
+	uniqKey string // 区分接口
 	handler func(...interface{}) []interface{}
 }
 
 //go:generate mockery --name=RequestFormatter --outpkg=mock_formatter
 type RequestFormatter interface {
-	GetUniqKey(...interface{}) []byte
+	GetUniqKey(string, ...interface{}) []byte
 	MarshalWrapI
 }
 

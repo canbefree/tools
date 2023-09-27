@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"sync"
+
+	"github.com/SuperJourney/tools/helper"
 )
 
 type EventManageIFace interface {
@@ -31,16 +33,15 @@ var (
 var DefaultEventMange = &EventManage{
 	lock:    sync.Mutex{},
 	listens: make(map[string][]interface{}),
-	log:     DefaultLog,
+	log:     helper.DefaultLog,
 }
 
 var EventManageInstance EventManageIFace = DefaultEventMange
 
 type EventManage struct {
-	g       sync.WaitGroup
 	lock    sync.Mutex
 	listens map[string][]interface{}
-	log     LogI
+	log     helper.LogI
 }
 
 type EventIFace interface {

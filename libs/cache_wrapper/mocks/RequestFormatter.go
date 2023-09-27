@@ -9,15 +9,16 @@ type RequestFormatter struct {
 	mock.Mock
 }
 
-// GetUniqKey provides a mock function with given fields: _a0
-func (_m *RequestFormatter) GetUniqKey(_a0 ...interface{}) []byte {
+// GetUniqKey provides a mock function with given fields: _a0, _a1
+func (_m *RequestFormatter) GetUniqKey(_a0 string, _a1 ...interface{}) []byte {
 	var _ca []interface{}
-	_ca = append(_ca, _a0...)
+	_ca = append(_ca, _a0)
+	_ca = append(_ca, _a1...)
 	ret := _m.Called(_ca...)
 
 	var r0 []byte
-	if rf, ok := ret.Get(0).(func(...interface{}) []byte); ok {
-		r0 = rf(_a0...)
+	if rf, ok := ret.Get(0).(func(string, ...interface{}) []byte); ok {
+		r0 = rf(_a0, _a1...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
