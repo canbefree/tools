@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/SuperJourney/tools/helper"
+	"github.com/SuperJourney/tools/pkg"
 )
 
 type EventManageIFace interface {
@@ -33,7 +33,7 @@ var (
 var DefaultEventMange = &EventManage{
 	lock:    sync.Mutex{},
 	listens: make(map[string][]interface{}),
-	log:     helper.DefaultLog,
+	log:     pkg.DefaultLog,
 }
 
 var EventManageInstance EventManageIFace = DefaultEventMange
@@ -41,7 +41,7 @@ var EventManageInstance EventManageIFace = DefaultEventMange
 type EventManage struct {
 	lock    sync.Mutex
 	listens map[string][]interface{}
-	log     helper.LogI
+	log     pkg.LogI
 }
 
 type EventIFace interface {

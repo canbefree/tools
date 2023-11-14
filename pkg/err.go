@@ -1,4 +1,4 @@
-package helper
+package pkg
 
 var PanicIfErr = func(err error) {
 	if err != nil {
