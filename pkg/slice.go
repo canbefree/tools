@@ -1,4 +1,4 @@
-package helper
+package pkg
 
 func UnsetSlice[T any](s []T, i int) []T {
 	if i > len(s)-1 {
